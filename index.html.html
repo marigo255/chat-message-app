@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAT MESSAGE</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b141a; color: #e9edef; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .container { 
+            background-color: #111b21; 
+            width: 100%; 
+            max-width: 420px; 
+            height: 720px; 
+            border-radius: 16px; 
+            padding: 12px; 
+            box-shadow: 0 12px 32px rgba(0,0,0,0.7); 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .page { display: none; height: 100%; flex-direction: column; }
+        .active { display: flex; }
+
+        /* USAJILI */
+        #pageRegister {
+            background: linear-gradient(rgba(11, 20, 26, 0.9), rgba(11, 20, 26, 0.9)), 
+                        url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: cover;
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        h1.app-title { text-align: center; color: #00a884; font-size: 24px; margin: 5px 0 10px 0; font-weight: 800; }
+        h2 { color: #f1f1f1; margin-top: 0; font-size: 16px; }
+        .input-group { margin-bottom: 8px; text-align: left; }
+        label { display: block; font-size: 11px; color: #8696a0; margin-bottom: 2px; }
+        input, select { width: 100%; padding: 8px; background: #111b21; border: 1px solid #2a3942; border-radius: 6px; color: white; outline: none; font-size: 13px; }
+        input:focus, select:focus { border-color: #00a884; }
+
+        .btn { width: 100%; background: #00a884; color: #111b21; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        /* HEADER & TABS */
+        .app-header { display: flex; justify-content: space-between; align-items: center; background: rgba(17, 27, 33, 0.95); padding: 6px 10px; border-radius: 8px; }
+        .menu-btn { font-size: 22px; cursor: pointer; padding: 0 5px; user-select: none; }
+        .user-header-profile { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #00a884; cursor: pointer; }
+        
+        .nav-tabs { display: flex; margin-top: 10px; background: #202c33; border-radius: 8px; padding: 3px; }
+        .tab-btn { flex: 1; padding: 8px; text-align: center; font-weight: bold; font-size: 13px; cursor: pointer; border-radius: 6px; color: #8696a0; }
+        .tab-btn.active-tab { background: #00a884; color: #111b21; }
+
+        /* DROPDOWN MENU */
+        .dropdown-menu { display: none; position: absolute; top: 50px; left: 12px; background: #233138; border-radius: 8px; width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); z-index: 100; }
+        .dropdown-menu div { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #111b21; }
+        .dropdown-menu div:hover { background: #00a884; color: #111b21; font-weight: bold; }
+
+        /* PANELS */
+        .panel { display: none; background: #111b21; padding: 15px; border-radius: 12px; position: absolute; top: 50px; left: 12px; right: 12px; bottom: 50px; z-index: 90; box-shadow: 0 4px 20px rgba(0,0,0,0.8); overflow-y: auto; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a3942; padding-bottom: 8px; margin-bottom: 12px; }
+        .close-btn { color: #ef4444; cursor: pointer; font-weight: bold; }
+
+        /* LISTS */
+        .chat-list { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .chat-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(32, 44, 51, 0.7); border-bottom: 1px solid #2a3942; cursor: pointer; border-radius: 8px; margin-bottom: 6px; }
+        .chat-item:hover { background-color: #202c33; }
+        .avatar-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .chat-info { flex: 1; overflow: hidden; }
+        .chat-info h4 { margin: 0 0 3px 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-info p { margin: 0; font-size: 12px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-time { font-size: 10px; color: #8696a0; }
+
+        /* FLOATING BUTTON (+) */
+        .fab-add { position: absolute; bottom: 15px; right: 15px; width: 50px; height: 50px; background: #00a884; color: #111b21; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer; z-index: 50; }
+
+        /* CHAT SCREEN */
+        #chatScreen { display: none; flex-direction: column; height: 100%; background: #0b141a; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 12px; padding: 10px; z-index: 80; background-size: cover; background-position: center; }
+        .chat-screen-header { display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(17, 27, 33, 0.95); border-radius: 8px; border-bottom: 1px solid #222d34; }
+        .back-btn { font-size: 22px; cursor: pointer; color: #00a884; font-weight: bold; }
+        
+        .messages-box { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+        .message { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 13px; line-height: 1.4; word-break: break-word; position: relative; }
+        .message.sent { background: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 0; }
+        .message.received { background: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 0; }
+        
+        /* TIKETI ZA MESSAGE (RANGI NA MIFUMO) */
+        .msg-meta { font-size: 9px; color: #8696a0; text-align: right; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
+        .tick-offline { color: #000000; font-weight: bold; font-size: 11px; } /* Tiki 1 Nyeusi */
+        .tick-delivered { color: #22c55e; font-weight: bold; font-size: 11px; } /* Tiki 2 Kijani */
+        .tick-read { color: #eab308; font-weight: bold; font-size: 11px; } /* Tiki 2 Njano */
+
+        /* INPUT BAR & MEDIA BUTTONS */
+        .chat-input-bar { display: flex; gap: 4px; align-items: center; background: #202c33; padding: 6px; border-radius: 8px; }
+        .chat-input-bar input[type="text"] { flex: 1; padding: 8px; border: none; background: transparent; }
+        
+        .media-actions { display: flex; gap: 4px; align-items: center; }
+        .media-btn { background: #2a3942; border: none; color: white; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .media-btn:hover { background: #00a884; color: #111b21; }
+
+        .emoji-picker { display: none; background: #111b21; padding: 6px; border-radius: 8px; border: 1px solid #2a3942; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; width: 100%; }
+        .emoji-item { cursor: pointer; font-size: 18px; }
+
+        .themes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .theme-card { height: 80px; border-radius: 8px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; position: relative; }
+        .theme-card:hover { border-color: #00a884; }
+        .theme-title { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); font-size: 10px; text-align: center; padding: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="appContainer">
+
+        <!-- ================= UKURASA WA 1: USAJILI MPYA ================= -->
+        <div id="pageRegister" class="page active">
+            <h1 class="app-title">CHAT MESSAGE</h1>
+            <h2 id="lblRegTitle">Fungua Akaunti</h2>
+            <form onsubmit="handleRegistration(event)">
+                <div class="input-group">
+                    <label id="lblFirstName">Jina la Kwanza (Lako)</label>
+                    <input type="text" id="regFirstName" placeholder="Mfano: Juma" required>
+                </div>
+                <div class="input-group">
+                    <label id="lblMiddleName">Jina la Pili (Baba)</label>
+                    <input type="text" id="regMiddleName" placeholder="Mfano: Ali" required>
+                </div>
+                <div class="input-group">
+                    <label id="lblLastName">Jina la Tatu (Babu)</label>
+                    <input type="text" id="regLastName" placeholder="Mfano: Hassan" required>
+                </div>
+                <div class="input-group">
+                    <label id="lblGender">Jinsia</label>
+                    <select id="regGender" required>
+                        <option value="" id="optSelectGender">Chagua Jinsia</option>
+                        <option value="Mume" id="optMale">Mume</option>
+                        <option value="Mke" id="optFemale">Mke</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label id="lblDob">Tarehe ya Kuzaliwa</label>
+                    <input type="date" id="regDob" required>
+                </div>
+                <div class="input-group">
+                    <label id="lblEmail">Barua Pepe (Email)</label>
+                    <input type="email" id="regEmail" placeholder="mfano@gmail.com" required>
+                </div>
+                <div class="input-group">
+                    <label id="lblPhone">Namba ya Simu</label>
+                    <input type="tel" id="regPhone" placeholder="07XXXXXXXX" required>
+                </div>
+                <button type="submit" class="btn" id="btnSendOtp">Tuma OTP</button>
+            </form>
+        </div>
+
+        <!-- POPUP YA OTP -->
+        <div id="otpModal" class="panel" style="top: 25%; bottom: auto; z-index: 120;">
+            <h3 id="lblOtpTitle">Thibitisha Code</h3>
+            <p style="font-size: 12px; color: #8696a0;" id="lblOtpDesc">Umetumiwa OTP kwenye simu yako. (Code: <strong>1234</strong>)</p>
+            <input type="text" id="otpInput" placeholder="Ingiza Code" style="text-align: center; letter-spacing: 5px; font-size: 18px;">
+            <button class="btn" onclick="verifyOTP()" id="btnVerifyOtp">Thibitisha Code</button>
+        </div>
+
+
+        <!-- ================= UKURASA WA 2: MAIN CHAT APP ================= -->
+        <div id="pageApp" class="page">
+            
+            <!-- Header na Profile Picture -->
+            <div class="app-header">
+                <div class="menu-btn" onclick="toggleMenu()">⋮</div>
+                <h3 style="margin: 0; color: #00a884; letter-spacing: 1px;">CHAT MESSAGE</h3>
+                <img id="userHeaderAvatar" src="https://via.placeholder.com/150/00a884/ffffff?text=User" class="user-header-profile" onclick="openPanel('panelSetting')" title="Profile Yangu">
+            </div>
+
+            <!-- TABS: CHATS na GROUPS -->
+            <div class="nav-tabs">
+                <div class="tab-btn active-tab" id="tabChats" onclick="switchTab('chats')">CHATS</div>
+                <div class="tab-btn" id="tabGroups" onclick="switchTab('groups')">GROUPS</div>
+            </div>
+
+            <!-- DROPDOWN MENU -->
+            <div id="dropdownMenu" class="dropdown-menu">
+                <div onclick="openPanel('panelSetting')" id="menuProfile">1. Taarifa Binafsi & Settings</div>
+                <div onclick="openPanel('panelThemes')" id="menuThemes">2. Themes (20+)</div>
+                <div onclick="openPrivateMessage()" id="menuPrivate">3. Private Message</div>
+                <div onclick="openPanel('panelBlocked')" id="menuBlocked">4. Blocked Numbers</div>
+            </div>
+
+            <!-- ORODHA YA CHATS -->
+            <div class="chat-list" id="chatListSection">
+                <div class="chat-item" onclick="openChat('juma')">
+                    <img id="img_juma" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" class="avatar-img">
+                    <div class="chat-info">
+                        <h4>Juma Ali</h4>
+                        <p id="lastMsg_juma">Habari za kazi bro?</p>
+                    </div>
+                    <span class="chat-time">10:45 AM</span>
+                </div>
+                <div class="chat-item" onclick="openChat('asha')">
+                    <img id="img_asha" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" class="avatar-img">
+                    <div class="chat-info">
+                        <h4>Asha Hassan</h4>
+                        <p id="lastMsg_asha">Za siku nyingi!</p>
+                    </div>
+                    <span class="chat-time">09:15 AM</span>
+                </div>
+            </div>
+
+            <!-- ORODHA YA GROUPS -->
+            <div class="chat-list" id="groupListSection" style="display: none;">
+                <div class="chat-item" onclick="openChat('group_biashara')">
+                    <img id="img_group_biashara" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100" class="avatar-img">
+                    <div class="chat-info">
+                        <h4>Group la Biashara</h4>
+                        <p id="lastMsg_group_biashara">Rashid: Mzigo mpya umeingia!</p>
+                    </div>
+                    <span class="chat-time">11:00 AM</span>
+                </div>
+            </div>
+
+            <!-- KITUFE CHA (+): PHONEBOOK -->
+            <div class="fab-add" onclick="openAddMenu()" title="Anzisha Chat">+</div>
+
+            <!-- CHAT SCREEN PANEL -->
+            <div id="chatScreen">
+                <div class="chat-screen-header">
+                    <span class="back-btn" onclick="closeChat()">←</span>
+                    <img id="currentChatAvatar" src="" class="avatar-img" style="width:35px; height:35px;">
+                    <div style="flex:1;">
+                        <h4 id="currentChatUser" style="margin:0; font-size: 14px;">User</h4>
+                    </div>
+                </div>
+
+                <!-- BOX LA UJUMBE -->
+                <div class="messages-box" id="messagesBox"></div>
+
+                <!-- EMOJI PICKER -->
+                <div class="emoji-picker" id="emojiPicker">
+                    <span class="emoji-item" onclick="addEmoji('😀')">😀</span>
+                    <span class="emoji-item" onclick="addEmoji('😂')">😂</span>
+                    <span class="emoji-item" onclick="addEmoji('❤️')">❤️</span>
+                    <span class="emoji-item" onclick="addEmoji('👍')">👍</span>
+                    <span class="emoji-item" onclick="addEmoji('🔥')">🔥</span>
+                    <span class="emoji-item" onclick="addEmoji('🙏')">🙏</span>
+                </div>
+
+                <!-- INPUT BAR & MEDIA BUTTONS (BILA MAELEKEZO YA TIKI) -->
+                <div class="chat-input-bar">
+                    <span style="cursor:pointer; font-size:18px;" onclick="toggleEmojiPicker()">😊</span>
+                    <input type="text" id="chatMsgInput" placeholder="Andika ujumbe...">
+
+                    <div class="media-actions">
+                        <label class="media-btn" title="Tuma Picha">
+                            📷 <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="sendMediaFile(this, 'image')">
+                        </label>
+                        <label class="media-btn" title="Tuma Video">
+                            🎥 <input type="file" accept="video/*" capture="environment" style="display:none;" onchange="sendMediaFile(this, 'video')">
+                        </label>
+                        <button class="media-btn" id="btnRecordAudio" onclick="toggleAudioRecording()" title="Ujumbe wa Sauti">🎙️</button>
+                    </div>
+
+                    <button class="btn" style="width:auto; margin:0; padding: 8px 12px;" onclick="sendChatMessage()" id="btnSendMsg">Tuma</button>
+                </div>
+            </div>
+
+            <!-- PANEL YA ADD CHAT / PHONEBOOK -->
+            <div id="panelAddChat" class="panel">
+                <div class="panel-header">
+                    <h3 style="margin:0;" id="lblPhonebookTitle">Orodha ya Phonebook</h3>
+                    <span class="close-btn" onclick="closePanels()">X</span>
+                </div>
+                <div id="phonebookList"></div>
+            </div>
+
+            <!-- PANEL YA TAARIFA BINAFSI & SETTINGS -->
+            <div id="panelSetting" class="panel">
+                <div class="panel-header">
+                    <h3 style="margin:0;" id="lblSettingsTitle">Taarifa Binafsi & Settings</h3>
+                    <span class="close-btn" onclick="closePanels()">X</span>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img id="editProfilePreview" src="https://via.placeholder.com/150/00a884/ffffff?text=User" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #00a884;">
+                    <br>
+                    <label class="btn" style="display:inline-block; width:auto; padding:6px 12px; margin-top:8px;" id="lblChangePic">
+                        Badilisha Picha <input type="file" accept="image/*" style="display:none;" onchange="updateProfilePicture(this)">
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <label id="lblEditName">Jina Kamili</label>
+                    <input type="text" id="editFullName">
+                </div>
+                <div class="input-group">
+                    <label id="lblEditPhone">Namba ya Simu</label>
+                    <input type="tel" id="editPhone">
+                </div>
+                <div class="input-group">
+                    <label id="lblEditEmail">Barua Pepe (Email)</label>
+                    <input type="email" id="editEmail">
+                </div>
+                <button class="btn" onclick="saveProfileChanges()" id="btnSaveInfo">Hifadhi Taarifa</button>
+
+                <hr style="border-color:#2a3942; margin: 15px 0;">
+                <div class="input-group">
+                    <label id="lblSelectLang">Chagua Lugha / Language</label>
+                    <select id="langSelect" onchange="changeLanguage(this.value)">
+                        <option value="sw">Kiswahili</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PANEL YA THEMES -->
+            <div id="panelThemes" class="panel">
+                <div class="panel-header">
+                    <h3 style="margin:0;" id="lblThemesTitle">Chagua Theme (20+)</h3>
+                    <span class="close-btn" onclick="closePanels()">X</span>
+                </div>
+                <div class="themes-grid" id="themesGrid"></div>
+            </div>
+
+            <!-- PANEL YA PRIVATE MESSAGE -->
+            <div id="panelPrivate" class="panel">
+                <div class="panel-header">
+                    <h3 style="margin:0;" id="lblPrivateTitle">Private Messages</h3>
+                    <span class="close-btn" onclick="closePanels()">X</span>
+                </div>
+                <div id="pinArea">
+                    <p style="font-size: 13px;" id="lblPinInstruct">Ingiza PIN yako kufungua:</p>
+                    <input type="password" id="pinInput" placeholder="Ingiza PIN" style="margin-bottom: 10px;">
+                    <button class="btn" onclick="checkPIN()" id="btnUnlockPin">Fungua</button>
+                </div>
+                <div id="privateContent" style="display: none;">
+                    <p style="color: #00a884; font-size: 12px;" id="lblPrivateAccess">✅ Umeingia kwenye Private Section</p>
+                </div>
+            </div>
+
+            <!-- PANEL YA BLOCKED NUMBERS -->
+            <div id="panelBlocked" class="panel">
+                <div class="panel-header">
+                    <h3 style="margin:0;" id="lblBlockedTitle">Blocked Numbers</h3>
+                    <span class="close-btn" onclick="closePanels()">X</span>
+                </div>
+                <div id="blockedList"><p style="font-size:12px; color:#8696a0;" id="lblNoBlocked">Hakuna namba zilizoblockiwa.</p></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        var currentUser = {};
+        var activeChatId = null;
+        var mediaRecorder, audioChunks = [];
+        var isRecording = false;
+        var userPIN = null;
+        var currentLang = "sw";
+
+        var contactsData = {
+            'juma': { name: "Juma Ali", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isOnline: true },
+            'asha': { name: "Asha Hassan", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", isOnline: false },
+            'group_biashara': { name: "Group la Biashara", img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100", isOnline: true }
+        };
+
+        var chatBuffers = {
+            'juma': [
+                { sender: 'received', text: 'Habari za kazi bro?', time: '10:45 AM', status: 'read' }
+            ],
+            'asha': [
+                { sender: 'received', text: 'Za siku nyingi!', time: '09:15 AM', status: 'read' }
+            ],
+            'group_biashara': [
+                { sender: 'received', text: 'Rashid: Mzigo mpya umeingia!', time: '11:00 AM', status: 'read' }
+            ]
+        };
+
+        var themeImages = [
+            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400",
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400",
+            "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400"
+        ];
+
+        function getTZTime() {
+            var date = new Date();
+            return date.toLocaleTimeString('sw-TZ', { timeZone: 'Africa/Dar_es_Salaam', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function handleRegistration(event) {
+            event.preventDefault();
+            var dobInput = document.getElementById('regDob').value;
+            var dob = new Date(dobInput);
+            var today = new Date();
+            var age = today.getFullYear() - dob.getFullYear();
+            var m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) { age--; }
+
+            if (age < 18) {
+                var msg = (currentLang === 'en') ? "Registration failed! You must be at least 18 years old." : "Usajili umekataliwa! Mfumo huu ni kwa ajili ya watu wenye umri wa miaka 18 na kuendelea tu.";
+                alert(msg);
+                return;
+            }
+
+            var fName = document.getElementById('regFirstName').value;
+            var mName = document.getElementById('regMiddleName').value;
+            var lName = document.getElementById('regLastName').value;
+            
+            currentUser = {
+                fullName: `${fName} ${mName} ${lName}`,
+                phone: document.getElementById('regPhone').value,
+                email: document.getElementById('regEmail').value,
+                img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
+            };
+
+            document.getElementById('otpModal').style.display = 'block';
+        }
+
+        function verifyOTP() {
+            var otp = document.getElementById('otpInput').value.trim();
+            if(otp === "1234" || otp !== "") {
+                document.getElementById('otpModal').style.display = 'none';
+                document.getElementById('pageRegister').classList.remove('active');
+                document.getElementById('pageApp').classList.add('active');
+                
+                document.getElementById('userHeaderAvatar').src = currentUser.img;
+                document.getElementById('editProfilePreview').src = currentUser.img;
+                document.getElementById('editFullName').value = currentUser.fullName;
+                document.getElementById('editPhone').value = currentUser.phone;
+                document.getElementById('editEmail').value = currentUser.email;
+            } else { 
+                alert((currentLang === 'en') ? "Enter correct OTP!" : "Ingiza OTP sahihi!"); 
+            }
+        }
+
+        function switchTab(tab) {
+            if(tab === 'chats') {
+                document.getElementById('tabChats').className = 'tab-btn active-tab';
+                document.getElementById('tabGroups').className = 'tab-btn';
+                document.getElementById('chatListSection').style.display = 'block';
+                document.getElementById('groupListSection').style.display = 'none';
+            } else {
+                document.getElementById('tabGroups').className = 'tab-btn active-tab';
+                document.getElementById('tabChats').className = 'tab-btn';
+                document.getElementById('chatListSection').style.display = 'none';
+                document.getElementById('groupListSection').style.display = 'block';
+            }
+        }
+
+        function openChat(chatId) {
+            activeChatId = chatId;
+            var contact = contactsData[chatId];
+            document.getElementById('currentChatUser').innerText = contact.name;
+            document.getElementById('currentChatAvatar').src = contact.img;
+            
+            renderMessages();
+            document.getElementById('chatScreen').style.display = 'flex';
+        }
+
+        function renderMessages() {
+            var box = document.getElementById('messagesBox');
+            box.innerHTML = "";
+            var msgs = chatBuffers[activeChatId] || [];
+
+            msgs.forEach(function(m) {
+                var msgDiv = document.createElement('div');
+                msgDiv.className = `message ${m.sender}`;
+                
+                var tickHtml = "";
+                if(m.sender === 'sent') {
+                    if(m.status === 'offline') tickHtml = `<span class="tick-offline">✓</span>`;
+                    else if(m.status === 'delivered') tickHtml = `<span class="tick-delivered">✓✓</span>`;
+                    else if(m.status === 'read') tickHtml = `<span class="tick-read">✓✓</span>`;
+                }
+
+                msgDiv.innerHTML = `${m.text} <div class="msg-meta"><span>${m.time}</span> ${tickHtml}</div>`;
+                box.appendChild(msgDiv);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function closeChat() {
+            document.getElementById('chatScreen').style.display = 'none';
+            activeChatId = null;
+        }
+
+        // TUMA MESSAGE BILA MANUAL DROPDOWN (AUTOMATIC SYSTEM TICKS)
+        function sendChatMessage() {
+            var input = document.getElementById('chatMsgInput');
+            var text = input.value.trim();
+
+            if(text !== "" && activeChatId) {
+                var contact = contactsData[activeChatId];
+                // Kujua Status Kiutendaji: kama mpokeaji yupo online inakua 'read', la sivyo 'offline'
+                var autoStatus = contact.isOnline ? 'read' : 'offline';
+
+                var newMsg = { sender: 'sent', text: text, time: getTZTime(), status: autoStatus };
+                chatBuffers[activeChatId].push(newMsg);
+                
+                if(document.getElementById(`lastMsg_${activeChatId}`)) {
+                    document.getElementById(`lastMsg_${activeChatId}`).innerText = text;
+                }
+
+                renderMessages();
+                input.value = "";
+            }
+        }
+
+        function sendMediaFile(fileInput, type) {
+            var file = fileInput.files[0];
+            if(file && activeChatId) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var contact = contactsData[activeChatId];
+                    var autoStatus = contact.isOnline ? 'read' : 'offline';
+                    var content = type === 'image' ? `<img src="${e.target.result}" style="max-width:100%; border-radius:6px;">` : `<video src="${e.target.result}" controls style="max-width:100%; border-radius:6px;"></video>`;
+                    chatBuffers[activeChatId].push({ sender: 'sent', text: content, time: getTZTime(), status: autoStatus });
+                    renderMessages();
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleAudioRecording() {
+            var btn = document.getElementById('btnRecordAudio');
+            if(!isRecording) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    audioChunks = [];
+                    mediaRecorder.addEventListener("dataavailable", event => { audioChunks.push(event.data); });
+                    isRecording = true;
+                    btn.style.background = "#ef4444";
+                }).catch(err => alert((currentLang === 'en') ? "Allow Mic to record audio!" : "Ruhusu Mic kurekodi sauti!"));
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.addEventListener("stop", () => {
+                    var audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    var audioUrl = URL.createObjectURL(audioBlob);
+                    var contact = contactsData[activeChatId];
+                    var autoStatus = contact.isOnline ? 'read' : 'offline';
+                    var content = `<audio src="${audioUrl}" controls></audio>`;
+                    chatBuffers[activeChatId].push({ sender: 'sent', text: content, time: getTZTime(), status: autoStatus });
+                    renderMessages();
+                });
+                isRecording = false;
+                btn.style.background = "#2a3942";
+            }
+        }
+
+        // LUGHA MBILI: MMFUMO MZIMA KUBADILIKA
+        function changeLanguage(lang) {
+            currentLang = lang;
+            if(lang === 'en') {
+                // USAJILI
+                document.getElementById('lblRegTitle').innerText = "Create Account";
+                document.getElementById('lblFirstName').innerText = "First Name";
+                document.getElementById('lblMiddleName').innerText = "Middle Name";
+                document.getElementById('lblLastName').innerText = "Last Name";
+                document.getElementById('lblGender').innerText = "Gender";
+                document.getElementById('optSelectGender').innerText = "Select Gender";
+                document.getElementById('optMale').innerText = "Male";
+                document.getElementById('optFemale').innerText = "Female";
+                document.getElementById('lblDob').innerText = "Date of Birth";
+                document.getElementById('lblEmail').innerText = "Email Address";
+                document.getElementById('lblPhone').innerText = "Phone Number";
+                document.getElementById('btnSendOtp').innerText = "Send OTP";
+                
+                // OTP
+                document.getElementById('lblOtpTitle').innerText = "Verify Code";
+                document.getElementById('lblOtpDesc').innerHTML = "An OTP code has been sent to your phone. (Code: <strong>1234</strong>)";
+                document.getElementById('btnVerifyOtp').innerText = "Verify Code";
+
+                // APP HOME & TABS
+                document.getElementById('tabChats').innerText = "CHATS";
+                document.getElementById('tabGroups').innerText = "GROUPS";
+                document.getElementById('menuProfile').innerText = "1. Personal Info & Settings";
+                document.getElementById('menuThemes').innerText = "2. Themes (20+)";
+                document.getElementById('menuPrivate').innerText = "3. Private Messages";
+                document.getElementById('menuBlocked').innerText = "4. Blocked Numbers";
+
+                // CHAT INPUT
+                document.getElementById('chatMsgInput').placeholder = "Type a message...";
+                document.getElementById('btnSendMsg').innerText = "Send";
+
+                // PANELS & SETTINGS
+                document.getElementById('lblPhonebookTitle').innerText = "Phonebook Contacts";
+                document.getElementById('lblSettingsTitle').innerText = "Personal Info & Settings";
+                document.getElementById('lblChangePic').innerHTML = 'Change Photo <input type="file" accept="image/*" style="display:none;" onchange="updateProfilePicture(this)">';
+                document.getElementById('lblEditName').innerText = "Full Name";
+                document.getElementById('lblEditPhone').innerText = "Phone Number";
+                document.getElementById('lblEditEmail').innerText = "Email Address";
+                document.getElementById('btnSaveInfo').innerText = "Save Information";
+                document.getElementById('lblSelectLang').innerText = "Select Language";
+                document.getElementById('lblThemesTitle').innerText = "Choose Theme (20+)";
+                document.getElementById('lblPrivateTitle').innerText = "Private Messages";
+                document.getElementById('lblPinInstruct').innerText = "Enter your PIN to unlock:";
+                document.getElementById('btnUnlockPin').innerText = "Unlock";
+                document.getElementById('lblPrivateAccess').innerText = "✅ You have accessed Private Section";
+                document.getElementById('lblBlockedTitle').innerText = "Blocked Numbers";
+                document.getElementById('lblNoBlocked').innerText = "No blocked numbers.";
+            } else {
+                // USAJILI
+                document.getElementById('lblRegTitle').innerText = "Fungua Akaunti";
+                document.getElementById('lblFirstName').innerText = "Jina la Kwanza (Lako)";
+                document.getElementById('lblMiddleName').innerText = "Jina la Pili (Baba)";
+                document.getElementById('lblLastName').innerText = "Jina la Tatu (Babu)";
+                document.getElementById('lblGender').innerText = "Jinsia";
+                document.getElementById('optSelectGender').innerText = "Chagua Jinsia";
+                document.getElementById('optMale').innerText = "Mume";
+                document.getElementById('optFemale').innerText = "Mke";
+                document.getElementById('lblDob').innerText = "Tarehe ya Kuzaliwa";
+                document.getElementById('lblEmail').innerText = "Barua Pepe (Email)";
+                document.getElementById('lblPhone').innerText = "Namba ya Simu";
+                document.getElementById('btnSendOtp').innerText = "Tuma OTP";
+                
+                // OTP
+                document.getElementById('lblOtpTitle').innerText = "Thibitisha Code";
+                document.getElementById('lblOtpDesc').innerHTML = "Umetumiwa OTP kwenye simu yako. (Code: <strong>1234</strong>)";
+                document.getElementById('btnVerifyOtp').innerText = "Thibitisha Code";
+
+                // APP HOME & TABS
+                document.getElementById('tabChats').innerText = "CHATS";
+                document.getElementById('tabGroups').innerText = "GROUPS";
+                document.getElementById('menuProfile').innerText = "1. Taarifa Binafsi & Settings";
+                document.getElementById('menuThemes').innerText = "2. Themes (20+)";
+                document.getElementById('menuPrivate').innerText = "3. Private Message";
+                document.getElementById('menuBlocked').innerText = "4. Blocked Numbers";
+
+                // CHAT INPUT
+                document.getElementById('chatMsgInput').placeholder = "Andika ujumbe...";
+                document.getElementById('btnSendMsg').innerText = "Tuma";
+
+                // PANELS & SETTINGS
+                document.getElementById('lblPhonebookTitle').innerText = "Orodha ya Phonebook";
+                document.getElementById('lblSettingsTitle').innerText = "Taarifa Binafsi & Settings";
+                document.getElementById('lblChangePic').innerHTML = 'Badilisha Picha <input type="file" accept="image/*" style="display:none;" onchange="updateProfilePicture(this)">';
+                document.getElementById('lblEditName').innerText = "Jina Kamili";
+                document.getElementById('lblEditPhone').innerText = "Namba ya Simu";
+                document.getElementById('lblEditEmail').innerText = "Barua Pepe (Email)";
+                document.getElementById('btnSaveInfo').innerText = "Hifadhi Taarifa";
+                document.getElementById('lblSelectLang').innerText = "Chagua Lugha / Language";
+                document.getElementById('lblThemesTitle').innerText = "Chagua Theme (20+)";
+                document.getElementById('lblPrivateTitle').innerText = "Private Messages";
+                document.getElementById('lblPinInstruct').innerText = "Ingiza PIN yako kufungua:";
+                document.getElementById('btnUnlockPin').innerText = "Fungua";
+                document.getElementById('lblPrivateAccess').innerText = "✅ Umeingia kwenye Private Section";
+                document.getElementById('lblBlockedTitle').innerText = "Blocked Numbers";
+                document.getElementById('lblNoBlocked').innerText = "Hakuna namba zilizoblockiwa.";
+            }
+        }
+
+        function updateProfilePicture(input) {
+            if(input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUser.img = e.target.result;
+                    document.getElementById('editProfilePreview').src = e.target.result;
+                    document.getElementById('userHeaderAvatar').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfileChanges() {
+            currentUser.fullName = document.getElementById('editFullName').value;
+            currentUser.phone = document.getElementById('editPhone').value;
+            currentUser.email = document.getElementById('editEmail').value;
+            alert((currentLang === 'en') ? "Information saved successfully!" : "Taarifa zako zimehifadhiwa kikamilifu!");
+            closePanels();
+        }
+
+        function openAddMenu() {
+            openPanel('panelAddChat');
+            var listContainer = document.getElementById('phonebookList');
+            listContainer.innerHTML = "";
+            for (var key in contactsData) {
+                var c = contactsData[key];
+                listContainer.innerHTML += `
+                    <div class="chat-item" onclick="startChatFromPhonebook('${key}')">
+                        <img src="${c.img}" class="avatar-img">
+                        <div class="chat-info">
+                            <h4>${c.name}</h4>
+                            <p>${(currentLang === 'en') ? "Tap to chat" : "Gusa kuanzisha chat"}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function startChatFromPhonebook(key) {
+            closePanels();
+            openChat(key);
+        }
+
+        function toggleEmojiPicker() {
+            var picker = document.getElementById('emojiPicker');
+            picker.style.display = (picker.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function addEmoji(emoji) {
+            document.getElementById('chatMsgInput').value += emoji;
+        }
+
+        function toggleMenu() {
+            var menu = document.getElementById('dropdownMenu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function closePanels() {
+            document.getElementById('panelSetting').style.display = 'none';
+            document.getElementById('panelThemes').style.display = 'none';
+            document.getElementById('panelPrivate').style.display = 'none';
+            document.getElementById('panelBlocked').style.display = 'none';
+            document.getElementById('panelAddChat').style.display = 'none';
+            document.getElementById('dropdownMenu').style.display = 'none';
+        }
+
+        function openPanel(id) {
+            closePanels();
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function loadThemes() {
+            var grid = document.getElementById('themesGrid');
+            grid.innerHTML = "";
+            themeImages.forEach(function(imgUrl, index) {
+                grid.innerHTML += `
+                    <div class="theme-card" style="background-image: url('${imgUrl}');" onclick="applyTheme('${imgUrl}')">
+                        <div class="theme-title">Theme ${index + 1}</div>
+                    </div>
+                `;
+            });
+        }
+        loadThemes();
+
+        function applyTheme(url) {
+            document.getElementById('appContainer').style.backgroundImage = `linear-gradient(rgba(11,20,26,0.7), rgba(11,20,26,0.7)), url('${url}')`;
+            document.getElementById('chatScreen').style.backgroundImage = `linear-gradient(rgba(11,20,26,0.85), rgba(11,20,26,0.85)), url('${url}')`;
+            closePanels();
+        }
+
+        function openPrivateMessage() {
+            closePanels();
+            document.getElementById('panelPrivate').style.display = 'block';
+        }
+
+        function checkPIN() {
+            var input = document.getElementById('pinInput').value;
+            if(userPIN === null || input === userPIN) {
+                userPIN = input;
+                document.getElementById('pinArea').style.display = 'none';
+                document.getElementById('privateContent').style.display = 'block';
+            } else { alert((currentLang === 'en') ? "Incorrect PIN!" : "PIN Sio Sahihi!"); }
+        }
+    </script>
+</body>
+</html>
